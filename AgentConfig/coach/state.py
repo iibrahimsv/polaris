@@ -14,10 +14,10 @@ from pathlib import Path
 def state_dir() -> Path:
     """Return the active state directory.
 
-    Honors COACH_STATE_DIR if set (used by tests); otherwise
-    ~/agentstate.
+    Honors COACH_STATE_DIR if set and non-empty (used by tests);
+    otherwise ~/agentstate.
     """
-    override = os.environ.get("COACH_STATE_DIR")
+    override = os.environ.get("COACH_STATE_DIR", "").strip()
     if override:
         return Path(override)
     return Path.home() / "agentstate"
