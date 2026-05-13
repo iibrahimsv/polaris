@@ -10,11 +10,19 @@ from __future__ import annotations
 import argparse
 import sys
 from importlib import resources
+from typing import Callable
 from pathlib import Path
 
 from coach import state
 
-TEMPLATES = ("profile.md", "config.toml", "repos.toml")
+# Single source of truth: template filename → callable returning its destination path.
+# Adding a new template means adding one entry here (and a matching file in templates/).
+_TEMPLATE_TARGETS: dict[str, Callable[[], Path]] = {
+    "profile.md": state.profile_path,
+    "config.toml": state.config_path,
+    "repos.toml": state.repos_path,
+}
+TEMPLATES: tuple[str, ...] = tuple(_TEMPLATE_TARGETS.keys())
 
 
 def _template_text(name: str) -> str:
@@ -23,12 +31,7 @@ def _template_text(name: str) -> str:
 
 
 def _target_for_template(name: str) -> Path:
-    mapping = {
-        "profile.md": state.profile_path(),
-        "config.toml": state.config_path(),
-        "repos.toml": state.repos_path(),
-    }
-    return mapping[name]
+    return _TEMPLATE_TARGETS[name]()
 
 
 def cmd_init(args: argparse.Namespace) -> int:
@@ -41,7 +44,7 @@ def cmd_init(args: argparse.Namespace) -> int:
         state.atomic_write(target, _template_text(name))
         print(f"write {target}")
     print(f"\nstate dir ready at {state.state_dir()}")
-    print("next: edit profile.md to set your direction.")
+    print(f"next: edit {state.profile_path()} to set your direction.")
     return 0
 
 

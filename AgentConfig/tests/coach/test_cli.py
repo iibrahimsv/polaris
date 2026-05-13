@@ -7,13 +7,17 @@ import pytest
 from coach import cli, state
 
 
-def run_cli(args, env_state_dir):
-    """Invoke the CLI as a function call (faster than subprocess)."""
+def run_cli(args):
+    """Invoke the CLI as a function call (faster than subprocess).
+
+    Note: state-dir isolation is provided by the `isolated_state_dir` pytest
+    fixture (it sets COACH_STATE_DIR via monkeypatch), not by this helper.
+    """
     return cli.main(args)
 
 
 def test_init_creates_state_dir_and_template_files(isolated_state_dir):
-    exit_code = run_cli(["init"], isolated_state_dir)
+    exit_code = run_cli(["init"])
     assert exit_code == 0
     assert isolated_state_dir.is_dir()
     assert state.profile_path().exists()
@@ -25,7 +29,7 @@ def test_init_creates_state_dir_and_template_files(isolated_state_dir):
 
 
 def test_init_profile_contains_expected_template_headers(isolated_state_dir):
-    run_cli(["init"], isolated_state_dir)
+    run_cli(["init"])
     profile_text = state.profile_path().read_text()
     assert "# Engineering Profile" in profile_text
     assert "## Target role" in profile_text
@@ -33,31 +37,41 @@ def test_init_profile_contains_expected_template_headers(isolated_state_dir):
 
 
 def test_init_does_not_overwrite_existing_profile(isolated_state_dir):
-    run_cli(["init"], isolated_state_dir)
+    run_cli(["init"])
     state.atomic_write(state.profile_path(), "my custom profile\n")
-    run_cli(["init"], isolated_state_dir)
+    run_cli(["init"])
     assert state.profile_path().read_text() == "my custom profile\n"
 
 
 def test_init_force_overwrites_existing_profile(isolated_state_dir):
-    run_cli(["init"], isolated_state_dir)
+    run_cli(["init"])
     state.atomic_write(state.profile_path(), "my custom profile\n")
-    run_cli(["init", "--force"], isolated_state_dir)
+    run_cli(["init", "--force"])
     assert "# Engineering Profile" in state.profile_path().read_text()
 
 
 def test_status_on_fresh_state_dir_reports_missing(isolated_state_dir, capsys):
     isolated_state_dir.mkdir(parents=True, exist_ok=True)
-    exit_code = run_cli(["status"], isolated_state_dir)
+    exit_code = run_cli(["status"])
     captured = capsys.readouterr()
     assert exit_code == 0
     assert "profile.md" in captured.out
     assert "missing" in captured.out.lower()
 
 
+def test_status_on_uninitialized_state_dir_prints_hint(isolated_state_dir, capsys):
+    # isolated_state_dir is set in env but NOT created on disk yet
+    assert not isolated_state_dir.exists()
+    exit_code = run_cli(["status"])
+    captured = capsys.readouterr()
+    assert exit_code == 0
+    assert "not initialized" in captured.out
+    assert "coach init" in captured.out
+
+
 def test_status_after_init_reports_present(isolated_state_dir, capsys):
-    run_cli(["init"], isolated_state_dir)
-    run_cli(["status"], isolated_state_dir)
+    run_cli(["init"])
+    run_cli(["status"])
     captured = capsys.readouterr()
     assert "profile.md" in captured.out
     assert "present" in captured.out.lower()
