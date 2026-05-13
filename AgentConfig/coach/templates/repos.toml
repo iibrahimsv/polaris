@@ -1,0 +1,13 @@
+# Repos for the Historian to scan nightly.
+# Add one [[repo]] block per repo you want tracked.
+
+[[repo]]
+path      = "/Users/iibrahimsv/PycharmProjects/ComposioAgent"
+nickname  = "ComposioAgent"
+languages = ["python"]
+
+# Example second entry — uncomment and edit:
+# [[repo]]
+# path      = "/Users/iibrahimsv/code/cs-coursework"
+# nickname  = "Coursework"
+# languages = ["java"]

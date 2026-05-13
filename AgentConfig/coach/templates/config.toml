@@ -1,0 +1,24 @@
+# Coach system configuration.
+# Edit values, but keep the schema — agents read these by key name.
+
+[models]
+scout     = "claude-sonnet-4-6"
+coach     = "claude-opus-4-7"
+critic    = "claude-opus-4-7"
+historian = "claude-sonnet-4-6"
+
+[schedule]
+scout             = "0 6 * * *"
+coach             = "0 7 * * *"
+historian_nightly = "0 23 * * *"
+historian_weekly  = "30 22 * * 0"
+critic_weekly     = "0 22 * * 0"
+
+[delivery]
+shell_greeting = true   # cat today.md on new terminal session
+slack          = false  # v2 — Composio Slack DM
+email          = false  # v2 — Composio Gmail
+
+[critic]
+calibration_target  = "senior engineer at a top-tier company"
+post_commit_enabled = true
