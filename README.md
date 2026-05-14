@@ -1,6 +1,6 @@
 # Polaris
 
-An AI engineering coach — an orchestrator plus specialist subagents that watch
+An AI engineering coach an orchestrator plus specialist subagents that watch
 your repos, debrief you each morning, and keep your long-term direction
 honest. Built on the Anthropic SDK and Composio.
 
@@ -10,7 +10,7 @@ honest. Built on the Anthropic SDK and Composio.
 ## Why this exists
 
 I want to land an AI/Prompt Engineer role at a top-tier company. Generic
-"productivity bots" don't help with that — they give you reminders, not
+"productivity bots" don't help with that they give you reminders, not
 judgment. Polaris is the opposite: a small system of agents that read your
 actual repos and your stated 18-month direction, then tell you where today's
 work is helping and where it's drifting.
