@@ -1,14 +1,34 @@
 # Coach Bootstrap (Step 1) Implementation Plan
 
-> **For agentic workers:** REQUIRED SUB-SKILL: Use superpowers:subagent-driven-development (recommended) or superpowers:executing-plans to implement this plan task-by-task. Steps use checkbox (`- [ ]`) syntax for tracking.
+> **For agentic workers:** 
+> REQUIRED SUB-SKILL: 
+> Use superpowers:subagent-driven-development (recommended) or 
+> superpowers:executing-plans to implement this plan task-by-task. 
+> Steps use checkbox (`- [ ]`) syntax for tracking.
 
-**Goal:** Stand up the `coach` CLI skeleton, the `~/agentstate/` state directory, and the configuration templates (`profile.md`, `config.toml`, `repos.toml`) so the user has a working foundation to layer the Scout/Coach/Critic/Historian agents onto in subsequent plans.
+**Goal:** Stand up the `coach` CLI skeleton, the `~/agentstate/` state directory,
+and the configuration templates (`profile.md`, `config.toml`, `repos.toml`) 
+so the user has a working foundation to layer the 
+Scout/Coach/Critic/Historian agents onto in subsequent plans.
 
-**Architecture:** A new `AgentConfig/coach/` Python package with a thin argparse-based CLI (`coach init`, `coach status`), a `state.py` module that owns all path resolution and atomic file writes, and a `templates/` directory of starter files copied into `~/agentstate/` on init. State directory location is overridable via the `COACH_STATE_DIR` env var so tests can run in isolated temp directories. No external services, no API calls — this is pure scaffolding.
+**Architecture:** A new `AgentConfig/coach/` 
+Python package with a thin argparse-based 
+CLI (`coach init`, `coach status`), 
+a `state.py` module that owns all path resolution and 
+atomic file writes, and a `templates/` 
+directory of starter files copied into `~/agentstate/` on init. 
+State directory location is overridable via the `COACH_STATE_DIR` 
+env var so tests can run in isolated temp directories. No external services, 
+no API calls — this is pure scaffolding.
 
-**Tech Stack:** Python 3.11 (uses stdlib `tomllib`), argparse (stdlib, no new runtime deps), pytest (test-only dep), `pathlib`, `os.replace` for atomic writes.
+**Tech Stack:** Python 3.11 (uses stdlib `tomllib`), argparse (stdlib, no new runtime deps), 
+pytest (test-only dep), `pathlib`, `os.replace` for atomic writes.
 
-**Spec reference:** `docs/superpowers/specs/2026-05-13-engineering-coach-system-design.md` — §3 (agent designs), §4 (state directory contract), §5 (code structure), §6 build order step 1.
+**Spec reference:** 
+`docs/superpowers/specs/2026-05-13-engineering-coach-system-design.md` 
+— §3 (agent designs), 
+§4 (state directory contract), 
+§5 (code structure), §6 build order step 1.
 
 ---
 
@@ -129,7 +149,6 @@ Create `AgentConfig/tests/conftest.py`:
 ```python
 import os
 import pytest
-
 
 @pytest.fixture
 def isolated_state_dir(tmp_path, monkeypatch):

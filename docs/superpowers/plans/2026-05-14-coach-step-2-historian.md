@@ -30,8 +30,8 @@ AgentConfig/
 │   ├── historian.py                        # NEW: snapshot, render, run_nightly()
 │   └── cli.py                              # MODIFY: add `historian nightly` subparser
 └── tests/
+    ├── conftest.py                         # MODIFY: add make_repo fixture (alongside existing isolated_state_dir)
     └── coach/
-        ├── conftest.py                     # MODIFY: add make_repo fixture
         ├── test_repos.py                   # NEW
         ├── test_git_stats.py               # NEW
         ├── test_historian.py               # NEW
@@ -80,8 +80,9 @@ def _init_git(path: Path) -> None:
     subprocess.run(["git", "init", "-q"], cwd=path, check=True)
 
 
-def test_load_repos_returns_entries_in_declared_order(tmp_path, monkeypatch):
-    monkeypatch.setenv("COACH_STATE_DIR", str(tmp_path))
+def test_load_repos_returns_entries_in_declared_order(
+    isolated_state_dir, tmp_path
+):
     state.ensure_dir()
 
     repo_a = tmp_path / "repo_a"
@@ -214,8 +215,7 @@ Expected: 1 passed.
 Append to `AgentConfig/tests/coach/test_repos.py`:
 
 ```python
-def test_load_repos_missing_file_raises_with_init_hint(tmp_path, monkeypatch):
-    monkeypatch.setenv("COACH_STATE_DIR", str(tmp_path))
+def test_load_repos_missing_file_raises_with_init_hint(isolated_state_dir):
     # state dir exists but no repos.toml
     state.ensure_dir()
 
@@ -223,8 +223,7 @@ def test_load_repos_missing_file_raises_with_init_hint(tmp_path, monkeypatch):
         repos.load_repos()
 
 
-def test_load_repos_missing_path_raises_with_nickname(tmp_path, monkeypatch):
-    monkeypatch.setenv("COACH_STATE_DIR", str(tmp_path))
+def test_load_repos_missing_path_raises_with_nickname(isolated_state_dir):
     state.ensure_dir()
     state.repos_path().write_text(
         """
@@ -239,8 +238,7 @@ languages = ["python"]
         repos.load_repos()
 
 
-def test_load_repos_non_git_dir_raises(tmp_path, monkeypatch):
-    monkeypatch.setenv("COACH_STATE_DIR", str(tmp_path))
+def test_load_repos_non_git_dir_raises(isolated_state_dir, tmp_path):
     state.ensure_dir()
     not_a_repo = tmp_path / "plain_dir"
     not_a_repo.mkdir()
@@ -257,8 +255,7 @@ languages = ["python"]
         repos.load_repos()
 
 
-def test_load_repos_missing_required_field_raises(tmp_path, monkeypatch):
-    monkeypatch.setenv("COACH_STATE_DIR", str(tmp_path))
+def test_load_repos_missing_required_field_raises(isolated_state_dir):
     state.ensure_dir()
     state.repos_path().write_text(
         """
@@ -272,8 +269,7 @@ nickname = "NoLangs"
         repos.load_repos()
 
 
-def test_load_repos_empty_returns_empty_list(tmp_path, monkeypatch):
-    monkeypatch.setenv("COACH_STATE_DIR", str(tmp_path))
+def test_load_repos_empty_returns_empty_list(isolated_state_dir):
     state.ensure_dir()
     state.repos_path().write_text("# no entries yet\n")
 
@@ -312,21 +308,21 @@ EOF
 ## Task 2: Shared test fixture — `make_repo` helper
 
 **Files:**
-- Modify: `AgentConfig/tests/coach/conftest.py`
+- Modify: `AgentConfig/tests/conftest.py`
 
-The next two tasks (`git_stats.py` tests, integration tests) need to build small git repos with controlled commit timestamps. Put the helper in `conftest.py` so both can import it as a fixture.
+The next two tasks (`git_stats.py` tests, integration tests) need to build small git repos with controlled commit timestamps. The existing root-level conftest already defines `isolated_state_dir(tmp_path, monkeypatch)`. Add `make_repo` alongside it so both fixtures are discovered for any test under `tests/`.
 
 - [ ] **Step 1: Read the current conftest.py**
 
 ```bash
-cat /Users/iibrahimsv/PycharmProjects/ComposioAgent/AgentConfig/tests/coach/conftest.py
+cat /Users/iibrahimsv/PycharmProjects/ComposioAgent/AgentConfig/tests/conftest.py
 ```
 
-Expected: a small fixture (likely a `state_dir` override). Note its current content — you will append, not overwrite.
+Expected: the `isolated_state_dir` fixture (returns `tmp_path / "agentstate"`, sets `COACH_STATE_DIR` via monkeypatch). You will append, not overwrite.
 
 - [ ] **Step 2: Append the make_repo fixture**
 
-Append to `AgentConfig/tests/coach/conftest.py`:
+Append to `AgentConfig/tests/conftest.py`:
 
 ```python
 import os
@@ -385,6 +381,8 @@ def make_repo(tmp_path):
 
     return _build
 ```
+
+Note: pytest's `tmp_path` is a per-test fixture, so each test that asks for `make_repo` gets its own clean tmp_path. The `isolated_state_dir` fixture (already in this file) shares the same `tmp_path` — both create dirs as siblings under it, so they don't collide as long as `make_repo`'s `name` argument isn't `"agentstate"`.
 
 - [ ] **Step 3: Verify nothing broke**
 
@@ -876,6 +874,7 @@ def test_render_derived_state_includes_all_repos_and_totals():
     assert "120" in text  # diff total appears
     assert "python" in text
     assert "2.0" in text  # hours-by-stack value appears
+    assert "100" in text and "%" in text  # language share section appears
 
 
 def test_render_derived_state_handles_empty_repos_list():
@@ -1059,6 +1058,17 @@ def render_derived_state(snap: Snapshot) -> str:
             lines.append(f"- **{lang}**: {snap.hours_by_stack[lang]} hrs")
     lines.append("")
 
+    lines.append("## Language share (last 7 days)")
+    lines.append("")
+    total_hours = sum(snap.hours_by_stack.values())
+    if total_hours <= 0:
+        lines.append("- (no activity)")
+    else:
+        for lang in sorted(snap.hours_by_stack):
+            pct = round(100 * snap.hours_by_stack[lang] / total_hours, 1)
+            lines.append(f"- **{lang}**: {pct}%")
+    lines.append("")
+
     return "\n".join(lines)
 
 
@@ -1130,11 +1140,10 @@ Append to `AgentConfig/tests/coach/test_cli.py`:
 
 ```python
 def test_cli_historian_nightly_writes_derived_state(
-    make_repo, tmp_path, monkeypatch, capsys
+    make_repo, isolated_state_dir, capsys
 ):
     from coach import cli, state
 
-    monkeypatch.setenv("COACH_STATE_DIR", str(tmp_path))
     state.ensure_dir()
 
     repo = make_repo(
@@ -1272,23 +1281,15 @@ Verify visually:
 - Numbers look right (compare against `git log --since="7 days ago" --oneline` in the same repo).
 - Languages match what's declared in `repos.toml`.
 
-- [ ] **Step 3: Print the cron line to install**
+- [ ] **Step 3: Install the cron line**
 
-Print this line (do NOT auto-install it — the user will copy/paste into `crontab -e` so they see what's going into their crontab):
-
-```
-0 23 * * * /Users/iibrahimsv/PycharmProjects/ComposioAgent/venv_py311/bin/python -m coach.cli historian nightly --chdir /Users/iibrahimsv/PycharmProjects/ComposioAgent/AgentConfig >> /Users/iibrahimsv/agentstate/.runlog 2>&1
-```
-
-(Note: `coach.cli` is invoked via `python -m` so it picks up `AgentConfig/` as the package root. The CLI doesn't currently support a `--chdir` flag; either run with `cd ... && ...` in cron OR set `PYTHONPATH` — pick the approach matching `.zshrc`/cron conventions on this machine.)
-
-Recommended cron line (drop the unsupported flag, use `cd`):
+Do NOT auto-install. The user pastes this into their own `crontab -e` so they can see what they're authorizing:
 
 ```
 0 23 * * * cd /Users/iibrahimsv/PycharmProjects/ComposioAgent/AgentConfig && /Users/iibrahimsv/PycharmProjects/ComposioAgent/venv_py311/bin/python -m coach.cli historian nightly >> /Users/iibrahimsv/agentstate/.runlog 2>&1
 ```
 
-This matches spec §5 ("cron entries"). The user installs it with `crontab -e`.
+The `cd` matters because the `coach` package lives under `AgentConfig/` and `python -m coach.cli` needs that as the working dir for imports to resolve. Verify install with `crontab -l | grep historian`.
 
 - [ ] **Step 4: No commit needed for this task**
 
