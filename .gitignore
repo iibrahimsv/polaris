@@ -17,3 +17,7 @@ venv_*/
 
 # IDE
 .idea/workspace.xml
+
+# Claude Code per-session state
+.claude/worktrees/
+.claude/settings.local.json
