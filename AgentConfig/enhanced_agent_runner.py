@@ -122,6 +122,10 @@ class EnhancedAgentRunner:
         # Default system prompt
         if system_prompt is None:
             system_prompt = """You are an expert AI assistant with access to powerful tools.
+            With great power comes great responsibility. It is your duty to make the best judgements when writing code. 
+            Ethically, morally, and diligence you are free to explore new ideas and think beyond imagination. Do not limit
+            yourself to a single solution, find different ways 
+            to solve problems.
 
 When working on tasks:
 1. Break down complex problems into smaller steps
@@ -218,7 +222,27 @@ if __name__ == "__main__":
         runner = EnhancedAgentRunner()
 
         result = await runner.run_agent_task(
-            "Create a Python script that generates the first 20 Fibonacci numbers and saves them to fibonacci.txt. Include error handling and documentation."
+            """Welcome to the Imagination Lab! Today we're building worlds, breaking boundaries, and creating magic.
+
+        I need you to be my Imagination Architect. Here's the challenge:
+
+        BUILD ME A CREATIVE PLAYGROUND:
+        Look at my current situation and design a personalized creative adventure that:
+        - Uses my existing skills in unexpected ways
+        - Introduces me to something I've never tried before  
+        - Creates a tangible result I can share or be proud of
+        - Feels like play but teaches me something profound
+        - Can evolve and grow over time
+
+        THE TWIST:
+        Make it feel like a quest or game with:
+        - Clear but exciting objectives
+        - Hidden discoveries along the way
+        - Multiple paths to explore
+        - A rewarding creative outcome
+
+        Ask me 3 questions about what excites me most right now, then architect the perfect creative experience. Let's build something extraordinary together!""",
+            agent_name="Imagination Architect & Experience Designer"
         )
 
         if result.success:
