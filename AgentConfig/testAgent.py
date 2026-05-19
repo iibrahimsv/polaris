@@ -13,7 +13,7 @@ from dotenv import load_dotenv
 # Load environment variables
 load_dotenv()
 
-# Import our enhanced agentls
+# Import our enhanced agents
 try:
     from enhanced_agent_runner import EnhancedAgentRunner, SessionResult, quick_run
     from config import config
