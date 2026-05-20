@@ -1,0 +1,37 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0">
+<dict>
+  <key>Label</key>
+  <string>com.polaris.historian</string>
+
+  <key>ProgramArguments</key>
+  <array>
+    <string>/Users/iibrahimsv/PycharmProjects/ComposioAgent/venv_py311/bin/python</string>
+    <string>-m</string>
+    <string>coach.cli</string>
+    <string>historian</string>
+    <string>nightly</string>
+  </array>
+
+  <key>WorkingDirectory</key>
+  <string>/Users/iibrahimsv/PycharmProjects/ComposioAgent/AgentConfig</string>
+
+  <key>StartCalendarInterval</key>
+  <dict>
+    <key>Hour</key>
+    <integer>23</integer>
+    <key>Minute</key>
+    <integer>0</integer>
+  </dict>
+
+  <key>RunAtLoad</key>
+  <false/>
+
+  <key>StandardOutPath</key>
+  <string>/Users/iibrahimsv/agentstate/.runlog</string>
+
+  <key>StandardErrorPath</key>
+  <string>/Users/iibrahimsv/agentstate/.runlog</string>
+</dict>
+</plist>
