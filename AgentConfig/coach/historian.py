@@ -19,10 +19,12 @@ from pathlib import Path
 from coach import git_stats, state
 from coach.repos import RepoEntry, load_repos
 
-LINES_PER_HOUR = 60
+LINES_PER_HOUR = 200
 """Default conversion factor for diff lines → engineering hours.
-60 lines/hour is a defensible industry-average rule of thumb. Override
-per-call via collect_snapshot(..., lines_per_hour=X)."""
+200 lines/hour reflects AI-assisted velocity (Claude-in-the-loop pair
+programming); a vanilla hand-coded baseline is closer to 50–80. Override
+per-call via collect_snapshot(..., lines_per_hour=X) and tune as more
+weeks of real activity accumulate."""
 
 SCHEMA_VERSION = 1
 SOURCE_AGENT = "historian"
