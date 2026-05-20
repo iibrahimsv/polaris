@@ -90,3 +90,36 @@ def test_module_entrypoint_runs():
     assert result.returncode == 0
     assert "init" in result.stdout
     assert "status" in result.stdout
+
+
+def test_cli_historian_nightly_writes_derived_state(
+    make_repo, isolated_state_dir, capsys
+):
+    state.ensure_dir()
+
+    repo = make_repo(
+        name="cli_alpha",
+        commits=[
+            ("2026-05-14T20:00:00+00:00", "main.py", "a\nb\nc\n"),
+            ("2026-05-13T20:00:00+00:00", "main.py", "a\nb\n"),
+        ],
+    )
+    state.repos_path().write_text(
+        f"""
+[[repo]]
+path      = "{repo}"
+nickname  = "CliAlpha"
+languages = ["python"]
+"""
+    )
+
+    exit_code = cli.main(["historian", "nightly"])
+
+    assert exit_code == 0
+    out = state.derived_state_path().read_text()
+    assert "Derived State" in out
+    assert "CliAlpha" in out
+    assert "python" in out
+
+    captured = capsys.readouterr()
+    assert "derived_state.md" in captured.out

@@ -13,7 +13,7 @@ from importlib import resources
 from typing import Callable
 from pathlib import Path
 
-from coach import state
+from coach import historian, state
 
 # Single source of truth: template filename → callable returning its destination path.
 # Adding a new template means adding one entry here (and a matching file in templates/).
@@ -45,6 +45,12 @@ def cmd_init(args: argparse.Namespace) -> int:
         print(f"write {target}")
     print(f"\nstate dir ready at {state.state_dir()}")
     print(f"next: edit {state.profile_path()} to set your direction.")
+    return 0
+
+
+def cmd_historian_nightly(args: argparse.Namespace) -> int:
+    target = historian.run_nightly()
+    print(f"wrote {target}")
     return 0
 
 
@@ -86,6 +92,17 @@ def build_parser() -> argparse.ArgumentParser:
 
     p_status = sub.add_parser("status", help="show which state files are present")
     p_status.set_defaults(func=cmd_status)
+
+    p_historian = sub.add_parser(
+        "historian", help="long-arc activity history"
+    )
+    p_historian_sub = p_historian.add_subparsers(
+        dest="historian_cmd", required=True
+    )
+    p_historian_nightly = p_historian_sub.add_parser(
+        "nightly", help="walk repos and overwrite derived_state.md"
+    )
+    p_historian_nightly.set_defaults(func=cmd_historian_nightly)
 
     return parser
 
