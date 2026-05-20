@@ -16,7 +16,7 @@ venv_*/
 .DS_Store
 
 # IDE
-.idea/workspace.xml
+.idea/
 
 # Claude Code per-session state
 .claude/worktrees/
