@@ -21,11 +21,15 @@ def make_repo(tmp_path):
     named after the language hint (so file extensions match declared
     languages — useful for future per-extension language inference).
 
+    Commits are listed newest-first (index 0 is HEAD); the fixture
+    iterates in reverse so the FIRST entry becomes the most recent
+    commit and `git log` walks history chronologically.
+
     Usage:
         repo = make_repo(
             name="alpha",
             commits=[
-                ("2026-05-14T20:00:00+00:00", "main.py", "print('a')\n"),
+                ("2026-05-14T20:00:00+00:00", "main.py", "print('a')\n"),  # HEAD
                 ("2026-05-13T20:00:00+00:00", "main.py", "print('b')\n"),
             ],
         )
@@ -43,7 +47,7 @@ def make_repo(tmp_path):
         subprocess.run(
             ["git", "config", "user.name", "Test"], cwd=repo, check=True
         )
-        for iso_ts, filename, content in commits:
+        for iso_ts, filename, content in reversed(commits):
             (repo / filename).write_text(content)
             subprocess.run(["git", "add", filename], cwd=repo, check=True)
             env = {
