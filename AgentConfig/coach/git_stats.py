@@ -56,3 +56,44 @@ def commits_in_window(
     if not out.strip():
         return 0
     return len([line for line in out.splitlines() if line.strip()])
+
+
+def diff_lines_in_window(
+    repo: Path, days: int, now: datetime | None = None
+) -> dict[str, int]:
+    """Sum inserted and deleted lines across commits in the last `days`.
+
+    Returns {"insertions": N, "deletions": M, "total": N + M}.
+
+    Binary files (which git --numstat reports as `- -`) are skipped.
+    Empty repos and repos with zero in-window commits return all zeros.
+    """
+    if now is None:
+        now = datetime.now(timezone.utc)
+    since = (now - timedelta(days=days)).isoformat()
+    out = _run_git(
+        repo,
+        ["log", f"--since={since}", "--numstat", "--format="],
+    )
+
+    insertions = 0
+    deletions = 0
+    for line in out.splitlines():
+        parts = line.split("\t")
+        if len(parts) != 3:
+            continue
+        added, removed, _filename = parts
+        if added == "-" or removed == "-":
+            # binary file
+            continue
+        try:
+            insertions += int(added)
+            deletions += int(removed)
+        except ValueError:
+            continue
+
+    return {
+        "insertions": insertions,
+        "deletions": deletions,
+        "total": insertions + deletions,
+    }
