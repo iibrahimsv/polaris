@@ -43,7 +43,7 @@ component map and the call sequence diagram.
 | Step | Subagent       | Job                                              | Status   |
 |------|----------------|--------------------------------------------------|----------|
 | 1    | Coach (core)   | State dir, profile/config templates, CLI         | shipped  |
-| 2    | Historian      | Nightly repo crawl → `signals.md` digest         | next     |
+| 2    | Historian      | Nightly repo crawl → `derived_state.md` digest   | shipped  |
 | 3    | Critic         | Compare today's work against `profile.md`        | planned  |
 | 4    | Planner        | Morning brief: what to ship, what to drop        | planned  |
 | 5    | Reactive layer | Composio triggers for CI failures and PR review  | planned  |
