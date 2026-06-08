@@ -13,7 +13,7 @@ from importlib import resources
 from typing import Callable
 from pathlib import Path
 
-from coach import historian, state
+from coach import critic, historian, state
 
 # Single source of truth: template filename → callable returning its destination path.
 # Adding a new template means adding one entry here (and a matching file in templates/).
@@ -51,6 +51,13 @@ def cmd_init(args: argparse.Namespace) -> int:
 def cmd_historian_nightly(args: argparse.Namespace) -> int:
     target = historian.run_nightly()
     print(f"wrote {target}")
+    return 0
+
+
+def cmd_critic_run(args: argparse.Namespace) -> int:
+    target = critic.run(dry_run=args.dry_run)
+    if not args.dry_run:
+        print(f"wrote {target}")
     return 0
 
 
@@ -103,6 +110,18 @@ def build_parser() -> argparse.ArgumentParser:
         "nightly", help="walk repos and overwrite derived_state.md"
     )
     p_historian_nightly.set_defaults(func=cmd_historian_nightly)
+
+    p_critic = sub.add_parser("critic", help="senior-engineer code review")
+    p_critic_sub = p_critic.add_subparsers(dest="critic_cmd", required=True)
+    p_critic_run = p_critic_sub.add_parser(
+        "run", help="review the latest commit of repos[0]"
+    )
+    p_critic_run.add_argument(
+        "--dry-run",
+        action="store_true",
+        help="assemble the prompt without calling the API or writing the log",
+    )
+    p_critic_run.set_defaults(func=cmd_critic_run)
 
     return parser
 

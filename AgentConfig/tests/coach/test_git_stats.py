@@ -107,3 +107,46 @@ def test_diff_lines_in_window_skips_commits_outside_window(make_repo):
     result = git_stats.diff_lines_in_window(repo, days=7, now=now)
 
     assert result == {"insertions": 0, "deletions": 0, "total": 0}
+
+
+def test_commit_diff_shows_head_change(make_repo):
+    repo = make_repo(
+        name="d",
+        commits=[
+            ("2026-05-14T20:00:00+00:00", "a.py", "new\nline\n"),
+            ("2026-05-13T20:00:00+00:00", "a.py", "old\n"),
+        ],
+    )
+
+    diff = git_stats.commit_diff(repo)
+
+    assert "a.py" in diff
+    assert "new" in diff
+
+
+def test_commit_diff_single_commit_uses_empty_tree(make_repo):
+    repo = make_repo(
+        name="one",
+        commits=[
+            ("2026-05-14T20:00:00+00:00", "a.py", "only\n"),
+        ],
+    )
+
+    diff = git_stats.commit_diff(repo)
+
+    assert "a.py" in diff
+    assert "only" in diff
+
+
+def test_head_commit_info_returns_sha_and_subject(make_repo):
+    repo = make_repo(
+        name="h",
+        commits=[
+            ("2026-05-14T20:00:00+00:00", "a.py", "x\n"),
+        ],
+    )
+
+    info = git_stats.head_commit_info(repo)
+
+    assert info.sha_short
+    assert isinstance(info.subject, str)

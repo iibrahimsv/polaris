@@ -34,6 +34,7 @@ run_check () {
 run_check pytest    "$PY" -m pytest tests/coach/ -q
 run_check status    "$PY" -m coach.cli status
 run_check historian "$PY" -m coach.cli historian nightly
+run_check critic    "$PY" -m coach.cli critic run --dry-run
 
 if [ "$fails" -eq 0 ]; then
   echo "$TS  PASS  --${results}" >> "$LOG"

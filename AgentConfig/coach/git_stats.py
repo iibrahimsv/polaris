@@ -8,8 +8,19 @@ writes anywhere. Designed to be unit-testable with tmp_path repos.
 from __future__ import annotations
 
 import subprocess
+from dataclasses import dataclass
 from datetime import datetime, timedelta, timezone
 from pathlib import Path
+
+# Git's well-known SHA for the empty tree — used to diff the very first
+# commit (which has no parent) against "nothing".
+_EMPTY_TREE = "4b825dc642cb6eb9a060e54bf8d69288fbee4904"
+
+
+@dataclass(frozen=True)
+class CommitInfo:
+    sha_short: str
+    subject: str
 
 
 def _run_git(repo: Path, args: list[str]) -> str:
@@ -97,3 +108,31 @@ def diff_lines_in_window(
         "deletions": deletions,
         "total": insertions + deletions,
     }
+
+
+def commit_diff(repo: Path, rev_range: str = "HEAD~1..HEAD") -> str:
+    """Return the unified diff text for `rev_range`.
+
+    For the default HEAD~1..HEAD on a repo whose HEAD has no parent (a
+    single-commit repo), falls back to diffing HEAD against the git empty
+    tree so the first commit is still reviewable. Returns "" on failure.
+    """
+    if rev_range == "HEAD~1..HEAD":
+        has_parent = _run_git(
+            repo, ["rev-parse", "--verify", "-q", "HEAD~1"]
+        ).strip()
+        if not has_parent:
+            return _run_git(repo, ["diff", _EMPTY_TREE, "HEAD"])
+    return _run_git(repo, ["diff", rev_range])
+
+
+def head_commit_info(repo: Path) -> CommitInfo:
+    """Return the short SHA and subject line of HEAD.
+
+    Returns empty strings for a repo with no commits.
+    """
+    out = _run_git(repo, ["log", "-1", "--format=%h%x00%s"]).strip()
+    if not out:
+        return CommitInfo(sha_short="", subject="")
+    sha, _, subject = out.partition("\x00")
+    return CommitInfo(sha_short=sha, subject=subject)
