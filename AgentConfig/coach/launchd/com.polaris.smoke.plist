@@ -1,0 +1,36 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0">
+<dict>
+  <key>Label</key>
+  <string>com.polaris.smoke</string>
+
+  <key>ProgramArguments</key>
+  <array>
+    <string>/bin/bash</string>
+    <string>/Users/iibrahimsv/PycharmProjects/ComposioAgent/AgentConfig/coach/scripts/smoke.sh</string>
+  </array>
+
+  <key>WorkingDirectory</key>
+  <string>/Users/iibrahimsv/PycharmProjects/ComposioAgent/AgentConfig</string>
+
+  <!-- 23:10 — just after the Historian nightly (23:00), so the smoke run also
+       confirms the nightly job's interpreter and output path are healthy. -->
+  <key>StartCalendarInterval</key>
+  <dict>
+    <key>Hour</key>
+    <integer>23</integer>
+    <key>Minute</key>
+    <integer>10</integer>
+  </dict>
+
+  <key>RunAtLoad</key>
+  <false/>
+
+  <key>StandardOutPath</key>
+  <string>/Users/iibrahimsv/agentstate/.smoke_runlog</string>
+
+  <key>StandardErrorPath</key>
+  <string>/Users/iibrahimsv/agentstate/.smoke_runlog</string>
+</dict>
+</plist>
