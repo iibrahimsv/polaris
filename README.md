@@ -1,7 +1,7 @@
 # Polaris
 
 An AI engineering coach an orchestrator plus specialist subagents that watch
-your repos, debrief you each morning, and keep your long-term direction
+your repos, debrief you each morning, and keep your direction
 honest. Built on the Anthropic SDK and Composio.
 
 > Polaris is the star sailors steer by. This project is the same idea for an
