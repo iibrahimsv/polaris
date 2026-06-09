@@ -5,14 +5,11 @@ How the entry points, runner, and external APIs (Anthropic + Composio) fit toget
 ## Component map
 
 ```
-┌──────────────────────────────────────────────────────────────────────────┐
-│                              ENTRY POINTS                                │
+┌────────────────────────────────────────────────────────────────────────┐
+│                              ENTRY POINT                                 │
 │                                                                          │
-│   testAgent.py     interactive_agent.py     quick_start.py               │
-│   (test harness)   (REPL)                   (smoke test)                 │
-│                                                                          │
-│   simple_agent.py             diagnostic_agent.py                        │
-│   (standalone, no beta)       (probe which models work)                  │
+│   interactive_agent.py                                                   │
+│   (terminal REPL over the runner)                                        │
 └────────┬─────────────────────────────────────────┬───────────────────────┘
          │                                         │
          │ instantiates                            │ uses
@@ -44,20 +41,19 @@ How the entry points, runner, and external APIs (Anthropic + Composio) fit toget
 │     ├─ .stream() ◄───────┘  │ │               │
 │     └─ .send()              │ │               │ merged into
 │                             │ │               ▼
-│  client.messages.create ◄───┘ │  ┌──────────────────────────┐
-│  (simple_agent.py only)       │  │ tools=[                  │
-└──────────────┬────────────────┘  │   {agent_toolset_…},     │
-               │                   │   <composio tools…>      │
-               │ HTTPS             │ ]  ← passed to agents.create
-               ▼                   └──────────────────────────┘
-┌──────────────────────────┐
-│  api.anthropic.com       │
+│                             │ │  ┌──────────────────────────┐
+│                             │ │  │ tools=[                  │
+└──────────────┬──────────────┘ │  │   {agent_toolset_…},     │
+               │                │  │   <composio tools…>      │
+               │ HTTPS          │  │ ]  ← passed to agents.create
+               ▼                │  └──────────────────────────┘
+┌──────────────────────────┐    │
+│  api.anthropic.com       │◄───┘ merged tools
 │                          │
 │  /v1/environments        │   sandbox + networking
 │  /v1/agents              │   model + system + tools
 │  /v1/sessions            │   binds agent ↔ environment
 │  /v1/sessions/.../events │   bidirectional SSE
-│  /v1/messages            │   stateless chat (simple_agent)
 └──────────────────────────┘
 ```
 
@@ -88,22 +84,14 @@ User ──► run_agent_task(message)
 
 ```mermaid
 flowchart TD
-    subgraph Entry["Entry Points"]
-        TEST[testAgent.py]
+    subgraph Entry["Entry Point"]
         REPL[interactive_agent.py]
-        QS[quick_start.py]
-        SIMPLE[simple_agent.py]
-        DIAG[diagnostic_agent.py]
     end
 
     CONFIG[(config.AgentConfig<br/>api keys · model · tools)]
     RUNNER[EnhancedAgentRunner<br/>env/agent caches]
 
-    TEST --> RUNNER
     REPL --> RUNNER
-    QS --> RUNNER
-    DIAG -.probes.-> ANTH
-    SIMPLE --> MSG
 
     RUNNER --> CONFIG
     RUNNER -->|tools=| COMPOSIO
@@ -116,14 +104,11 @@ flowchart TD
         EV[sessions.events<br/>stream/send]
     end
 
-    MSG[messages.create<br/>stateless]
-
     subgraph COMPOSIO["Composio SDK"]
         CT[ComposioToolSet.get_tools]
     end
 
     ANTH -->|HTTPS| API[(api.anthropic.com)]
-    MSG -->|HTTPS| API
 ```
 
 ## Key concepts
@@ -135,7 +120,6 @@ flowchart TD
 | **Session** | One run: binds an agent to an environment with a timeout. | `beta.sessions` |
 | **Events** | Bidirectional stream — send `user.message`, receive `agent.message` / `agent.tool_use` / status. | `beta.sessions.events` |
 | **Composio tools** | Pre-built integrations (GitHub, Gmail, Slack, Sheets). Composio returns Anthropic-formatted tool schemas; bundle them into `tools=` on `agents.create`. The model emits tool calls; the env (or Composio) executes them. | `ComposioToolSet.get_tools()` |
-| **Messages API** | Non-agentic fallback in `simple_agent.py` — stateless chat, no environment, no tools. | `messages.create` |
 
 ## File responsibilities
 
@@ -144,8 +128,3 @@ flowchart TD
 | `config.py` | Single `AgentConfig` dataclass loaded via `.env`. Source of truth for keys, model, networking, allowed tools. |
 | `enhanced_agent_runner.py` | Core `EnhancedAgentRunner`. Caches env + agent IDs; runs sessions with streamed events; optional Composio integration. |
 | `interactive_agent.py` | Terminal REPL wrapping the runner. |
-| `testAgent.py` | Comprehensive test harness — env check, imports, agent creation, simple + code-gen tasks. |
-| `quick_start.py` | Minimal smoke test / quick entry. |
-| `simple_agent.py` | Standalone fallback using the standard Messages API (no beta needed). |
-| `diagnostic_agent.py` | Probes which Anthropic models are supported by the beta agents endpoint. |
-| `setup_agent.py` | One-time setup helper. |

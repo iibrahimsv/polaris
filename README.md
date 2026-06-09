@@ -26,14 +26,9 @@ contracts, and state model *is* the skill I'm hiring myself for.
 - **State module** with atomic writes (write-temp + `os.replace`) so readers
   never see a partial file, and a `COACH_STATE_DIR` override for tests.
 - **Anthropic agent runners** (`AgentConfig/`):
-  - `simple_agent.py` — stateless Messages API chat (smoke test for keys).
   - `enhanced_agent_runner.py` — full beta agents/sessions/events loop with
     env + agent caches and optional Composio tool injection.
   - `interactive_agent.py` — terminal REPL over the runner.
-  - `diagnostic_agent.py` — probes which models the beta agents endpoint
-    accepts, so you find out before a real session.
-  - `testAgent.py` — integration tests for the runner's success and error
-    paths.
 
 See [`AgentConfig/ARCHITECTURE.md`](AgentConfig/ARCHITECTURE.md) for the full
 component map and the call sequence diagram.
@@ -67,9 +62,6 @@ COMPOSIO_API_KEY=...        # optional — only needed for tool-using agents
 Then:
 
 ```bash
-# verify the SDK + key
-python diagnostic_agent.py
-
 # initialize the coach state dir at ~/agentstate/
 python -m coach init
 
@@ -92,10 +84,6 @@ polaris/
 │   ├── config.py               # AgentConfig dataclass (env-loaded)
 │   ├── enhanced_agent_runner.py
 │   ├── interactive_agent.py
-│   ├── simple_agent.py
-│   ├── diagnostic_agent.py
-│   ├── quick_start.py
-│   ├── testAgent.py
 │   ├── ARCHITECTURE.md
 │   └── requirements.txt
 └── README.md
